@@ -2,40 +2,98 @@
 // PERSONAL DASHBOARD — app.js
 // =============================================================================
 
+// ====== THEME TOGGLE ======
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  var btn = document.getElementById('theme-toggle');
+  if (btn) {
+    btn.textContent = theme === 'dark' ? '🌙' : '☀️';
+  }
+}
+
+function toggleTheme() {
+  var current = document.documentElement.getAttribute('data-theme') || 'dark';
+  var next = current === 'dark' ? 'light' : 'dark';
+  try {
+    localStorage.setItem('theme', next);
+  } catch (e) {
+    console.warn('Failed to save theme:', e);
+  }
+  applyTheme(next);
+}
+
+// ====== CUSTOM NAME GREETING ======
+
+var userName = '';
+
+function loadUserName() {
+  try {
+    var stored = localStorage.getItem('userName');
+    userName = stored ? stored : '';
+  } catch (e) {
+    console.warn('Failed to load userName:', e);
+    userName = '';
+  }
+}
+
+function saveUserName(name) {
+  try {
+    localStorage.setItem('userName', name);
+  } catch (e) {
+    console.warn('Failed to save userName:', e);
+  }
+}
+
+function getGreetingText(hour, name) {
+  var timeOfDay;
+  if (hour >= 5 && hour < 12) timeOfDay = 'Good Morning';
+  else if (hour >= 12 && hour < 18) timeOfDay = 'Good Afternoon';
+  else timeOfDay = 'Good Evening';
+
+  var emoji = (hour >= 12 && hour < 18) ? '☀️' : '👋';
+  if (hour < 5 || hour >= 18) emoji = '🌙';
+  // Use 👋 for morning, ☀️ for afternoon, 🌙 for evening (matching original)
+  if (hour >= 5 && hour < 12) emoji = '👋';
+  else if (hour >= 12 && hour < 18) emoji = '☀️';
+  else emoji = '🌙';
+
+  if (name) {
+    return timeOfDay + ', ' + name + ' ' + emoji;
+  }
+  return timeOfDay + ' ' + emoji;
+}
+
 // ========================== CLOCK & GREETING ==========================
 
 function updateClock() {
-  const now = new Date();
-  const h = String(now.getHours()).padStart(2, '0');
-  const m = String(now.getMinutes()).padStart(2, '0');
-  const s = String(now.getSeconds()).padStart(2, '0');
+  var now = new Date();
+  var h = String(now.getHours()).padStart(2, '0');
+  var m = String(now.getMinutes()).padStart(2, '0');
+  var s = String(now.getSeconds()).padStart(2, '0');
   document.getElementById('clock').textContent = h + ':' + m + ':' + s;
 
-  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const dateStr = days[now.getDay()] + ', ' + months[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
+  var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var dateStr = days[now.getDay()] + ', ' + months[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
   document.getElementById('date').textContent = dateStr;
 
-  const hour = now.getHours();
-  let greeting;
-  if (hour >= 5 && hour < 12) greeting = 'Good Morning 👋';
-  else if (hour >= 12 && hour < 18) greeting = 'Good Afternoon ☀️';
-  else greeting = 'Good Evening 🌙';
-  document.getElementById('greeting').textContent = greeting;
+  var hour = now.getHours();
+  document.getElementById('greeting').textContent = getGreetingText(hour, userName);
 }
 
 // ========================== FOCUS TIMER ==========================
 
-const timerState = {
+var timerState = {
   seconds: 1500,
   interval: null,
   running: false
 };
 
 function renderTimer() {
-  const mm = String(Math.floor(timerState.seconds / 60)).padStart(2, '0');
-  const ss = String(timerState.seconds % 60).padStart(2, '0');
-  const display = document.getElementById('timer-display');
+  var mm = String(Math.floor(timerState.seconds / 60)).padStart(2, '0');
+  var ss = String(timerState.seconds % 60).padStart(2, '0');
+  var display = document.getElementById('timer-display');
   display.textContent = mm + ':' + ss;
   document.getElementById('btn-start').disabled = timerState.running;
   document.getElementById('btn-stop').disabled = !timerState.running;
@@ -44,7 +102,7 @@ function renderTimer() {
 function startTimer() {
   if (timerState.running) return;
   timerState.running = true;
-  const display = document.getElementById('timer-display');
+  var display = document.getElementById('timer-display');
   display.classList.add('running');
   display.classList.remove('ended');
   timerState.interval = setInterval(function() {
@@ -62,7 +120,7 @@ function stopTimer() {
   timerState.running = false;
   clearInterval(timerState.interval);
   timerState.interval = null;
-  const display = document.getElementById('timer-display');
+  var display = document.getElementById('timer-display');
   display.classList.remove('running');
   renderTimer();
 }
@@ -70,20 +128,20 @@ function stopTimer() {
 function resetTimer() {
   stopTimer();
   timerState.seconds = 1500;
-  const display = document.getElementById('timer-display');
+  var display = document.getElementById('timer-display');
   display.classList.remove('ended', 'running');
   renderTimer();
 }
 
 function onTimerEnd() {
-  const display = document.getElementById('timer-display');
+  var display = document.getElementById('timer-display');
   display.classList.remove('running');
   display.classList.add('ended');
   // Optional audio cue using Web Audio API
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.frequency.value = 880;
@@ -98,11 +156,11 @@ function onTimerEnd() {
 
 // ========================== TO-DO LIST ==========================
 
-let tasks = [];
+var tasks = [];
 
 function loadTasks() {
   try {
-    const stored = localStorage.getItem('tasks');
+    var stored = localStorage.getItem('tasks');
     tasks = stored ? JSON.parse(stored) : [];
   } catch (e) {
     console.warn('Failed to load tasks:', e);
@@ -118,11 +176,49 @@ function saveTasks() {
   }
 }
 
+// ====== SORT TASKS ======
+
+var currentSort = 'default';
+
+function loadSortPreference() {
+  try {
+    var stored = localStorage.getItem('taskSort');
+    currentSort = stored ? stored : 'default';
+  } catch (e) {
+    console.warn('Failed to load sort preference:', e);
+    currentSort = 'default';
+  }
+  var el = document.getElementById('sort-select');
+  if (el) el.value = currentSort;
+}
+
+function saveSortPreference(sort) {
+  try {
+    localStorage.setItem('taskSort', sort);
+  } catch (e) {
+    console.warn('Failed to save sort preference:', e);
+  }
+}
+
 function renderTasks() {
-  const list = document.getElementById('todo-list');
+  var list = document.getElementById('todo-list');
   list.innerHTML = '';
-  tasks.forEach(function(task) {
-    const li = document.createElement('li');
+
+  // Create a sorted copy — do NOT mutate the original array
+  var sorted = tasks.slice();
+  if (currentSort === 'active') {
+    sorted.sort(function(a, b) { return (a.done ? 1 : 0) - (b.done ? 1 : 0); });
+  } else if (currentSort === 'done') {
+    sorted.sort(function(a, b) { return (b.done ? 1 : 0) - (a.done ? 1 : 0); });
+  } else if (currentSort === 'az') {
+    sorted.sort(function(a, b) {
+      return a.text.toLowerCase().localeCompare(b.text.toLowerCase());
+    });
+  }
+  // 'default': original insertion order — no sort needed
+
+  sorted.forEach(function(task) {
+    var li = document.createElement('li');
     if (task.done) li.classList.add('done');
     li.innerHTML =
       '<span class="task-text">' + escapeHtml(task.text) + '</span>' +
@@ -134,7 +230,7 @@ function renderTasks() {
 }
 
 function addTask(text) {
-  const trimmed = text.trim();
+  var trimmed = text.trim();
   if (!trimmed) return;
   tasks.push({ id: Date.now(), text: trimmed, done: false });
   saveTasks();
@@ -150,11 +246,11 @@ function toggleTask(id) {
 }
 
 function editTask(id) {
-  const task = tasks.find(function(t) { return t.id === id; });
+  var task = tasks.find(function(t) { return t.id === id; });
   if (!task) return;
-  const newText = window.prompt('Edit task:', task.text);
+  var newText = window.prompt('Edit task:', task.text);
   if (newText === null) return; // cancelled
-  const trimmed = newText.trim();
+  var trimmed = newText.trim();
   if (!trimmed) return; // empty — discard
   tasks = tasks.map(function(t) {
     return t.id === id ? Object.assign({}, t, { text: trimmed }) : t;
@@ -171,7 +267,7 @@ function deleteTask(id) {
 
 // ========================== QUICK LINKS ==========================
 
-const DEFAULT_LINKS = [
+var DEFAULT_LINKS = [
   { id: 1, name: 'Google',       url: 'https://google.com' },
   { id: 2, name: 'GitHub',       url: 'https://github.com' },
   { id: 3, name: 'YouTube',      url: 'https://youtube.com' },
@@ -179,11 +275,11 @@ const DEFAULT_LINKS = [
   { id: 5, name: 'MDN Web Docs', url: 'https://developer.mozilla.org' }
 ];
 
-let links = [];
+var links = [];
 
 function loadLinks() {
   try {
-    const stored = localStorage.getItem('quickLinks');
+    var stored = localStorage.getItem('quickLinks');
     if (stored) {
       links = JSON.parse(stored);
     } else {
@@ -205,10 +301,10 @@ function saveLinks() {
 }
 
 function renderLinks() {
-  const grid = document.getElementById('links-grid');
+  var grid = document.getElementById('links-grid');
   grid.innerHTML = '';
   links.forEach(function(link) {
-    const card = document.createElement('div');
+    var card = document.createElement('div');
     card.className = 'link-card';
     card.innerHTML =
       '<a href="' + escapeHtml(link.url) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(link.name) + '</a>' +
@@ -218,8 +314,8 @@ function renderLinks() {
 }
 
 function addLink(name, url) {
-  const trimmedName = name.trim();
-  let trimmedUrl = url.trim();
+  var trimmedName = name.trim();
+  var trimmedUrl = url.trim();
   if (!trimmedName || !trimmedUrl) return false;
   if (!trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://')) {
     trimmedUrl = 'https://' + trimmedUrl;
@@ -250,9 +346,31 @@ function escapeHtml(str) {
 // ========================== INIT ==========================
 
 function init() {
+  // Theme
+  var savedTheme;
+  try {
+    savedTheme = localStorage.getItem('theme') || 'dark';
+  } catch (e) {
+    savedTheme = 'dark';
+  }
+  applyTheme(savedTheme);
+  document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+
+  // Custom name
+  loadUserName();
+
   // Clock
   updateClock();
   setInterval(updateClock, 1000);
+
+  document.getElementById('btn-edit-name').addEventListener('click', function() {
+    var n = window.prompt("What's your name?", userName);
+    if (n !== null && n.trim() !== '') {
+      userName = n.trim();
+      saveUserName(userName);
+      updateClock();
+    }
+  });
 
   // Timer
   renderTimer();
@@ -262,10 +380,11 @@ function init() {
 
   // To-Do
   loadTasks();
+  loadSortPreference();
   renderTasks();
 
   document.getElementById('btn-add-task').addEventListener('click', function() {
-    const input = document.getElementById('todo-input');
+    var input = document.getElementById('todo-input');
     addTask(input.value);
     input.value = '';
     input.focus();
@@ -278,11 +397,17 @@ function init() {
     }
   });
 
+  document.getElementById('sort-select').addEventListener('change', function() {
+    currentSort = this.value;
+    saveSortPreference(currentSort);
+    renderTasks();
+  });
+
   // Event delegation for todo list
   document.getElementById('todo-list').addEventListener('click', function(e) {
-    const btn = e.target.closest('button');
+    var btn = e.target.closest('button');
     if (!btn) return;
-    const id = Number(btn.dataset.id);
+    var id = Number(btn.dataset.id);
     if (btn.classList.contains('btn-done'))   toggleTask(id);
     if (btn.classList.contains('btn-edit'))   editTask(id);
     if (btn.classList.contains('btn-delete')) deleteTask(id);
@@ -293,9 +418,9 @@ function init() {
   renderLinks();
 
   document.getElementById('btn-add-link').addEventListener('click', function() {
-    const nameInput = document.getElementById('link-name-input');
-    const urlInput  = document.getElementById('link-url-input');
-    const added = addLink(nameInput.value, urlInput.value);
+    var nameInput = document.getElementById('link-name-input');
+    var urlInput  = document.getElementById('link-url-input');
+    var added = addLink(nameInput.value, urlInput.value);
     if (added) {
       nameInput.value = '';
       urlInput.value  = '';
@@ -305,9 +430,9 @@ function init() {
 
   // Event delegation for links grid
   document.getElementById('links-grid').addEventListener('click', function(e) {
-    const btn = e.target.closest('button');
+    var btn = e.target.closest('button');
     if (!btn) return;
-    const id = Number(btn.dataset.id);
+    var id = Number(btn.dataset.id);
     if (btn.classList.contains('btn-delete-link')) deleteLink(id);
   });
 }

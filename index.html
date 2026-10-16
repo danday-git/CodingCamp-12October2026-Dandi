@@ -10,6 +10,9 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <!-- Theme toggle button (fixed top-right) -->
+  <button id="theme-toggle" title="Toggle theme">🌙</button>
+
   <div class="container">
 
     <!-- Section 1: Greeting & Clock -->
@@ -17,6 +20,7 @@
       <div id="clock">00:00:00</div>
       <div id="date">Loading...</div>
       <h1 id="greeting">Good Morning 👋</h1>
+      <button id="btn-edit-name">✏️ Edit name</button>
     </section>
 
     <!-- Section 2: Focus Timer -->
@@ -36,6 +40,15 @@
       <div class="todo-input-row">
         <input id="todo-input" type="text" placeholder="Add a new task...">
         <button id="btn-add-task">Add</button>
+      </div>
+      <div class="todo-sort-row">
+        <label for="sort-select">Sort:</label>
+        <select id="sort-select">
+          <option value="default">Default (Added)</option>
+          <option value="active">Active First</option>
+          <option value="done">Completed First</option>
+          <option value="az">A–Z</option>
+        </select>
       </div>
       <ul id="todo-list"></ul>
     </section>

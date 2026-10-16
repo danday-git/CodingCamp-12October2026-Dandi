@@ -1,6 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 
 /* ========================== CSS CUSTOM PROPERTIES ========================== */
+
+/* Default (dark) — used before JS runs */
 :root {
   --bg-primary:    #0f0f13;
   --bg-section:    #1a1a24;
@@ -13,6 +15,59 @@
   --danger:        #e05555;
   --success:       #55cc88;
   --border:        #2a2a3a;
+}
+
+/* ====== THEME TOGGLE ====== */
+
+[data-theme="dark"] {
+  --bg-primary:    #0f0f13;
+  --bg-section:    #1a1a24;
+  --bg-hover:      #252535;
+  --accent:        #6c63ff;
+  --accent-hover:  #5a52e0;
+  --text-primary:  #f0f0f5;
+  --text-secondary:#9090aa;
+  --text-done:     #555566;
+  --danger:        #e05555;
+  --success:       #55cc88;
+  --border:        #2a2a3a;
+}
+
+[data-theme="light"] {
+  --bg-primary:    #f5f5f0;
+  --bg-section:    #ffffff;
+  --bg-hover:      #f0f0eb;
+  --accent:        #6c63ff;
+  --accent-hover:  #5a52e0;
+  --text-primary:  #1a1a2e;
+  --text-secondary:#555570;
+  --text-done:     #aaaacc;
+  --danger:        #e05555;
+  --success:       #2ea86a;
+  --border:        #e0e0ee;
+}
+
+#theme-toggle {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 100;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#theme-toggle:hover {
+  background: var(--bg-hover);
 }
 
 /* ========================== RESET ========================== */
@@ -28,6 +83,7 @@ body {
   color: var(--text-primary);
   min-height: 100vh;
   padding: 1rem;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* ========================== LAYOUT ========================== */
@@ -46,6 +102,7 @@ body {
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   border: 1px solid var(--border);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* ========================== GREETING SECTION ========================== */
@@ -65,6 +122,24 @@ body {
 #greeting {
   font-size: 1.8rem;
   font-weight: 600;
+}
+
+/* ====== CUSTOM NAME GREETING ====== */
+
+#btn-edit-name {
+  background: transparent;
+  border: none;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  padding: 0.2rem 0;
+  margin-top: 0.4rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+#btn-edit-name:hover {
+  opacity: 1;
 }
 
 /* ========================== SECTION HEADINGS ========================== */
@@ -190,6 +265,39 @@ button:disabled {
 #btn-add-task:hover {
   background: var(--accent-hover);
 }
+
+/* ====== SORT TASKS ====== */
+
+.todo-sort-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  justify-content: flex-end;
+}
+
+.todo-sort-row label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+#sort-select {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.85rem;
+  outline: none;
+  cursor: pointer;
+}
+
+#sort-select:focus {
+  border-color: var(--accent);
+}
+
+/* ====== END SORT TASKS ====== */
 
 #todo-list {
   list-style: none;
