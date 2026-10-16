@@ -6,9 +6,13 @@
 
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
+  var themeColor = document.querySelector('meta[name="theme-color"]');
+  if (themeColor) themeColor.content = theme === 'dark' ? '#0f0f13' : '#f5f5f0';
   var btn = document.getElementById('theme-toggle');
   if (btn) {
     btn.textContent = theme === 'dark' ? '🌙' : '☀️';
+    btn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
+    btn.title = theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
   }
 }
 
@@ -45,15 +49,25 @@ function saveUserName(name) {
   }
 }
 
+function updateNameButton() {
+  var button = document.getElementById('btn-edit-name');
+  if (!button) return;
+  var label = userName ? 'Change greeting name' : 'Add name to greeting';
+  var description = userName
+    ? 'Change the name shown in your greeting above.'
+    : 'Add a name to personalize your greeting above.';
+  button.textContent = label;
+  button.title = description;
+  button.setAttribute('aria-label', label + '. ' + description);
+}
+
 function getGreetingText(hour, name) {
   var timeOfDay;
   if (hour >= 5 && hour < 12) timeOfDay = 'Good Morning';
   else if (hour >= 12 && hour < 18) timeOfDay = 'Good Afternoon';
   else timeOfDay = 'Good Evening';
 
-  var emoji = (hour >= 12 && hour < 18) ? '☀️' : '👋';
-  if (hour < 5 || hour >= 18) emoji = '🌙';
-  // Use 👋 for morning, ☀️ for afternoon, 🌙 for evening (matching original)
+  var emoji;
   if (hour >= 5 && hour < 12) emoji = '👋';
   else if (hour >= 12 && hour < 18) emoji = '☀️';
   else emoji = '🌙';
@@ -91,24 +105,26 @@ var timerState = {
 };
 
 function renderTimer() {
-  var mm = String(Math.floor(timerState.seconds / 60)).padStart(2, '0');
-  var ss = String(timerState.seconds % 60).padStart(2, '0');
+  var seconds = Math.max(0, timerState.seconds);
+  var mm = String(Math.floor(seconds / 60)).padStart(2, '0');
+  var ss = String(seconds % 60).padStart(2, '0');
   var display = document.getElementById('timer-display');
   display.textContent = mm + ':' + ss;
-  document.getElementById('btn-start').disabled = timerState.running;
+  document.getElementById('btn-start').disabled = timerState.running || seconds === 0;
   document.getElementById('btn-stop').disabled = !timerState.running;
 }
 
 function startTimer() {
-  if (timerState.running) return;
+  if (timerState.running || timerState.seconds <= 0) return;
   timerState.running = true;
   var display = document.getElementById('timer-display');
   display.classList.add('running');
   display.classList.remove('ended');
+  document.getElementById('timer-status').textContent = 'Timer running.';
   timerState.interval = setInterval(function() {
-    timerState.seconds--;
+    timerState.seconds = Math.max(0, timerState.seconds - 1);
     renderTimer();
-    if (timerState.seconds <= 0) {
+    if (timerState.seconds === 0) {
       stopTimer();
       onTimerEnd();
     }
@@ -117,11 +133,13 @@ function startTimer() {
 }
 
 function stopTimer() {
+  var wasRunning = timerState.running;
   timerState.running = false;
   clearInterval(timerState.interval);
   timerState.interval = null;
   var display = document.getElementById('timer-display');
   display.classList.remove('running');
+  if (wasRunning) document.getElementById('timer-status').textContent = 'Timer paused.';
   renderTimer();
 }
 
@@ -130,6 +148,7 @@ function resetTimer() {
   timerState.seconds = 1500;
   var display = document.getElementById('timer-display');
   display.classList.remove('ended', 'running');
+  document.getElementById('timer-status').textContent = 'Timer reset to 25 minutes.';
   renderTimer();
 }
 
@@ -137,6 +156,7 @@ function onTimerEnd() {
   var display = document.getElementById('timer-display');
   display.classList.remove('running');
   display.classList.add('ended');
+  document.getElementById('timer-status').textContent = 'Focus session complete. Reset the timer to start again.';
   // Optional audio cue using Web Audio API
   try {
     var ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -161,10 +181,15 @@ var tasks = [];
 function loadTasks() {
   try {
     var stored = localStorage.getItem('tasks');
-    tasks = stored ? JSON.parse(stored) : [];
+    var parsed = stored ? JSON.parse(stored) : [];
+    tasks = Array.isArray(parsed) ? parsed.filter(function(task) {
+      return task && Number.isSafeInteger(task.id) && typeof task.text === 'string' && typeof task.done === 'boolean';
+    }) : [];
+    if (stored && (!Array.isArray(parsed) || tasks.length !== parsed.length)) saveTasks();
   } catch (e) {
     console.warn('Failed to load tasks:', e);
     tasks = [];
+    saveTasks();
   }
 }
 
@@ -200,41 +225,82 @@ function saveSortPreference(sort) {
   }
 }
 
+function getSortedTasks() {
+  var sorted = tasks.slice();
+  var order = currentSort;
+
+  if (order === 'active') {
+    // Undone tasks first
+    sorted.sort(function(a, b) {
+      var aVal = a.done ? 1 : 0;
+      var bVal = b.done ? 1 : 0;
+      return aVal - bVal;
+    });
+  } else if (order === 'done') {
+    // Done tasks first
+    sorted.sort(function(a, b) {
+      var aVal = a.done ? 0 : 1;
+      var bVal = b.done ? 0 : 1;
+      return aVal - bVal;
+    });
+  } else if (order === 'az') {
+    // Alphabetical A–Z
+    sorted.sort(function(a, b) {
+      var textA = a.text.toLowerCase();
+      var textB = b.text.toLowerCase();
+      if (textA < textB) return -1;
+      if (textA > textB) return 1;
+      return 0;
+    });
+  }
+  // 'default': keep original insertion order
+
+  return sorted;
+}
+
 function renderTasks() {
   var list = document.getElementById('todo-list');
   list.innerHTML = '';
 
-  // Create a sorted copy — do NOT mutate the original array
-  var sorted = tasks.slice();
-  if (currentSort === 'active') {
-    sorted.sort(function(a, b) { return (a.done ? 1 : 0) - (b.done ? 1 : 0); });
-  } else if (currentSort === 'done') {
-    sorted.sort(function(a, b) { return (b.done ? 1 : 0) - (a.done ? 1 : 0); });
-  } else if (currentSort === 'az') {
-    sorted.sort(function(a, b) {
-      return a.text.toLowerCase().localeCompare(b.text.toLowerCase());
-    });
+  var sorted = getSortedTasks();
+
+  if (sorted.length === 0) {
+    var empty = document.createElement('li');
+    empty.className = 'todo-empty';
+    empty.textContent = 'No tasks yet. Add one above!';
+    list.appendChild(empty);
+    return;
   }
-  // 'default': original insertion order — no sort needed
 
   sorted.forEach(function(task) {
     var li = document.createElement('li');
     if (task.done) li.classList.add('done');
+    var taskLabel = escapeHtml(task.text);
     li.innerHTML =
-      '<span class="task-text">' + escapeHtml(task.text) + '</span>' +
-      '<button class="btn-done" data-id="' + task.id + '">' + (task.done ? 'Undo' : 'Done') + '</button>' +
-      '<button class="btn-edit" data-id="' + task.id + '">Edit</button>' +
-      '<button class="btn-delete" data-id="' + task.id + '">Delete</button>';
+      '<span class="task-text">' + taskLabel + '</span>' +
+      '<button class="btn-done" type="button" data-id="' + task.id + '" title="' + (task.done ? 'Mark this task as active' : 'Mark this task as done') + '" aria-label="' + (task.done ? 'Mark ' + taskLabel + ' as active' : 'Mark ' + taskLabel + ' as done') + '">' + (task.done ? 'Undo' : 'Done') + '</button>' +
+      '<button class="btn-edit" type="button" data-id="' + task.id + '" title="Change the task text" aria-label="Edit ' + taskLabel + '">Edit</button>' +
+      '<button class="btn-delete" type="button" data-id="' + task.id + '" title="Delete this task; Undo is available briefly" aria-label="Delete ' + taskLabel + '">Delete</button>';
     list.appendChild(li);
   });
 }
 
+var lastGeneratedId = 0;
+
+function createId(items) {
+  var id = Math.max(Date.now(), lastGeneratedId + 1);
+  while (items.some(function(item) { return item.id === id; })) id += 1;
+  lastGeneratedId = id;
+  return id;
+}
+
 function addTask(text) {
   var trimmed = text.trim();
-  if (!trimmed) return;
-  tasks.push({ id: Date.now(), text: trimmed, done: false });
+  if (!trimmed) return false;
+  tasks.push({ id: createId(tasks), text: trimmed, done: false });
   saveTasks();
   renderTasks();
+  return true;
 }
 
 function toggleTask(id) {
@@ -260,9 +326,17 @@ function editTask(id) {
 }
 
 function deleteTask(id) {
-  tasks = tasks.filter(function(t) { return t.id !== id; });
+  var index = tasks.findIndex(function(task) { return task.id === id; });
+  if (index < 0) return;
+  var deletedTask = tasks[index];
+  tasks.splice(index, 1);
   saveTasks();
   renderTasks();
+  showUndoToast('Task deleted.', function() {
+    tasks.splice(Math.min(index, tasks.length), 0, deletedTask);
+    saveTasks();
+    renderTasks();
+  });
 }
 
 // ========================== QUICK LINKS ==========================
@@ -277,18 +351,44 @@ var DEFAULT_LINKS = [
 
 var links = [];
 
+function copyDefaultLinks() {
+  return DEFAULT_LINKS.map(function(link) { return Object.assign({}, link); });
+}
+
 function loadLinks() {
   try {
     var stored = localStorage.getItem('quickLinks');
-    if (stored) {
-      links = JSON.parse(stored);
-    } else {
-      links = DEFAULT_LINKS.slice();
+    if (stored === null) {
+      links = copyDefaultLinks();
       saveLinks();
+      return;
     }
+    var parsed = JSON.parse(stored);
+    if (!Array.isArray(parsed)) {
+      links = copyDefaultLinks();
+      saveLinks();
+      return;
+    }
+    var needsSave = false;
+    links = parsed.reduce(function(validLinks, link) {
+      if (!link || !Number.isSafeInteger(link.id) || typeof link.name !== 'string' || typeof link.url !== 'string') {
+        needsSave = true;
+        return validLinks;
+      }
+      var normalized = normalizeLinkUrl(link.url);
+      if (normalized.error) {
+        needsSave = true;
+        return validLinks;
+      }
+      if (normalized.url !== link.url) needsSave = true;
+      validLinks.push({ id: link.id, name: link.name, url: normalized.url });
+      return validLinks;
+    }, []);
+    if (needsSave) saveLinks();
   } catch (e) {
     console.warn('Failed to load links:', e);
-    links = DEFAULT_LINKS.slice();
+    links = copyDefaultLinks();
+    saveLinks();
   }
 }
 
@@ -303,33 +403,96 @@ function saveLinks() {
 function renderLinks() {
   var grid = document.getElementById('links-grid');
   grid.innerHTML = '';
+  if (links.length === 0) {
+    var empty = document.createElement('p');
+    empty.className = 'links-empty';
+    empty.textContent = 'No quick links yet. Add one below.';
+    grid.appendChild(empty);
+    return;
+  }
   links.forEach(function(link) {
     var card = document.createElement('div');
     card.className = 'link-card';
     card.innerHTML =
       '<a href="' + escapeHtml(link.url) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(link.name) + '</a>' +
-      '<button class="btn-delete-link" data-id="' + link.id + '">Delete</button>';
+      '<button class="btn-delete-link" type="button" data-id="' + link.id + '" title="Delete this shortcut; Undo is available briefly" aria-label="Delete ' + escapeHtml(link.name) + ' link">Delete</button>';
     grid.appendChild(card);
   });
 }
 
+function normalizeLinkUrl(value) {
+  var candidate = value.trim();
+  if (!candidate) return { error: 'Enter a URL.' };
+  var explicitProtocol = candidate.match(/^([a-z][a-z\d+.-]*):\/\//i);
+  if (explicitProtocol && explicitProtocol[1].toLowerCase() !== 'http' && explicitProtocol[1].toLowerCase() !== 'https') {
+    return { error: 'Use a valid HTTP or HTTPS URL.' };
+  }
+  if (!explicitProtocol) {
+    var protocolLikeValue = /^[a-z][a-z\d+.-]*:/i.test(candidate);
+    var hostWithPort = /^[^/:]+:\d+(?:\/|$)/.test(candidate);
+    if (protocolLikeValue && !hostWithPort) return { error: 'Use a valid HTTP or HTTPS URL.' };
+    candidate = 'https://' + candidate;
+  }
+
+  try {
+    var parsed = new URL(candidate);
+    if ((parsed.protocol !== 'https:' && parsed.protocol !== 'http:') || !parsed.hostname) {
+      return { error: 'Use a valid HTTP or HTTPS URL.' };
+    }
+    return { url: parsed.href };
+  } catch (e) {
+    return { error: 'Enter a valid URL, such as example.com.' };
+  }
+}
+
 function addLink(name, url) {
   var trimmedName = name.trim();
-  var trimmedUrl = url.trim();
-  if (!trimmedName || !trimmedUrl) return false;
-  if (!trimmedUrl.startsWith('http://') && !trimmedUrl.startsWith('https://')) {
-    trimmedUrl = 'https://' + trimmedUrl;
-  }
-  links.push({ id: Date.now(), name: trimmedName, url: trimmedUrl });
+  if (!trimmedName) return { error: 'Enter a name for the link.', field: 'name' };
+  var normalized = normalizeLinkUrl(url);
+  if (normalized.error) return { error: normalized.error, field: 'url' };
+  links.push({ id: createId(links), name: trimmedName, url: normalized.url });
   saveLinks();
   renderLinks();
-  return true;
+  return { ok: true };
 }
 
 function deleteLink(id) {
-  links = links.filter(function(l) { return l.id !== id; });
+  var index = links.findIndex(function(link) { return link.id === id; });
+  if (index < 0) return;
+  var deletedLink = links[index];
+  links.splice(index, 1);
   saveLinks();
   renderLinks();
+  showUndoToast('Quick link deleted.', function() {
+    links.splice(Math.min(index, links.length), 0, deletedLink);
+    saveLinks();
+    renderLinks();
+  });
+}
+
+var undoCallback = null;
+var undoTimeout = null;
+
+function hideUndoToast() {
+  document.getElementById('undo-toast').hidden = true;
+  undoCallback = null;
+  if (undoTimeout) clearTimeout(undoTimeout);
+  undoTimeout = null;
+}
+
+function showUndoToast(message, callback) {
+  if (undoTimeout) clearTimeout(undoTimeout);
+  undoCallback = callback;
+  document.getElementById('undo-message').textContent = message;
+  document.getElementById('undo-toast').hidden = false;
+  undoTimeout = setTimeout(hideUndoToast, 7000);
+}
+
+function undoLastDeletion() {
+  if (!undoCallback) return;
+  var restore = undoCallback;
+  hideUndoToast();
+  restore();
 }
 
 // ========================== UTILITIES ==========================
@@ -349,7 +512,7 @@ function init() {
   // Theme
   var savedTheme;
   try {
-    savedTheme = localStorage.getItem('theme') || 'dark';
+    savedTheme = localStorage.getItem('theme') === 'light' ? 'light' : 'dark';
   } catch (e) {
     savedTheme = 'dark';
   }
@@ -358,16 +521,18 @@ function init() {
 
   // Custom name
   loadUserName();
+  updateNameButton();
 
   // Clock
   updateClock();
   setInterval(updateClock, 1000);
 
   document.getElementById('btn-edit-name').addEventListener('click', function() {
-    var n = window.prompt("What's your name?", userName);
-    if (n !== null && n.trim() !== '') {
+    var n = window.prompt("What's your name? (Leave empty to clear)", userName);
+    if (n !== null) {
       userName = n.trim();
       saveUserName(userName);
+      updateNameButton();
       updateClock();
     }
   });
@@ -377,24 +542,30 @@ function init() {
   document.getElementById('btn-start').addEventListener('click', startTimer);
   document.getElementById('btn-stop').addEventListener('click', stopTimer);
   document.getElementById('btn-reset').addEventListener('click', resetTimer);
+  document.getElementById('btn-undo').addEventListener('click', undoLastDeletion);
 
   // To-Do
   loadTasks();
   loadSortPreference();
   renderTasks();
 
-  document.getElementById('btn-add-task').addEventListener('click', function() {
+  function submitTaskInput() {
     var input = document.getElementById('todo-input');
-    addTask(input.value);
+    var status = document.getElementById('todo-status');
+    if (!addTask(input.value)) {
+      status.textContent = 'Enter a task before adding it.';
+      input.focus();
+      return;
+    }
+    status.textContent = 'Task added.';
     input.value = '';
     input.focus();
-  });
+  }
+
+  document.getElementById('btn-add-task').addEventListener('click', submitTaskInput);
 
   document.getElementById('todo-input').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-      addTask(this.value);
-      this.value = '';
-    }
+    if (e.key === 'Enter') submitTaskInput();
   });
 
   document.getElementById('sort-select').addEventListener('change', function() {
@@ -417,15 +588,36 @@ function init() {
   loadLinks();
   renderLinks();
 
-  document.getElementById('btn-add-link').addEventListener('click', function() {
-    var nameInput = document.getElementById('link-name-input');
-    var urlInput  = document.getElementById('link-url-input');
-    var added = addLink(nameInput.value, urlInput.value);
-    if (added) {
-      nameInput.value = '';
-      urlInput.value  = '';
-      nameInput.focus();
+  var linkForm = document.getElementById('add-link-form');
+  var linkNameInput = document.getElementById('link-name-input');
+  var linkUrlInput = document.getElementById('link-url-input');
+  var linkFormError = document.getElementById('link-form-error');
+
+  linkForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    linkFormError.textContent = '';
+    linkNameInput.removeAttribute('aria-invalid');
+    linkUrlInput.removeAttribute('aria-invalid');
+
+    var result = addLink(linkNameInput.value, linkUrlInput.value);
+    if (!result.ok) {
+      linkFormError.textContent = result.error;
+      var invalidInput = result.field === 'name' ? linkNameInput : linkUrlInput;
+      invalidInput.setAttribute('aria-invalid', 'true');
+      invalidInput.focus();
+      return;
     }
+
+    linkForm.reset();
+    linkNameInput.focus();
+  });
+
+  [linkNameInput, linkUrlInput].forEach(function(input) {
+    input.addEventListener('input', function() {
+      linkNameInput.removeAttribute('aria-invalid');
+      linkUrlInput.removeAttribute('aria-invalid');
+      linkFormError.textContent = '';
+    });
   });
 
   // Event delegation for links grid

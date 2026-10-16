@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f0f13">
   <title>Personal Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -10,61 +11,78 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <!-- Theme toggle button (fixed top-right) -->
-  <button id="theme-toggle" title="Toggle theme">🌙</button>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <button id="theme-toggle" type="button" title="Switch to light theme" aria-label="Switch to light theme">🌙</button>
 
-  <div class="container">
-
-    <!-- Section 1: Greeting & Clock -->
-    <section id="greeting-section">
-      <div id="clock">00:00:00</div>
-      <div id="date">Loading...</div>
-      <h1 id="greeting">Good Morning 👋</h1>
-      <button id="btn-edit-name">✏️ Edit name</button>
-    </section>
-
-    <!-- Section 2: Focus Timer -->
-    <section id="timer-section">
-      <h2>Focus Timer</h2>
-      <div id="timer-display">25:00</div>
-      <div class="timer-controls">
-        <button id="btn-start">Start</button>
-        <button id="btn-stop" disabled>Stop</button>
-        <button id="btn-reset">Reset</button>
+  <main id="main-content" class="container" tabindex="-1">
+    <section id="greeting-section" aria-labelledby="greeting">
+      <div class="clock-block">
+        <div id="clock">00:00:00</div>
+        <div id="date">Loading…</div>
+      </div>
+      <div class="greeting-block">
+        <h1 id="greeting">Good Morning 👋</h1>
+        <p class="field-help">Shown in the greeting above and saved on this device.</p>
+        <button id="btn-edit-name" type="button">Add name to greeting</button>
       </div>
     </section>
 
-    <!-- Section 3: To-Do List -->
-    <section id="todo-section">
-      <h2>To-Do List</h2>
+    <section id="todo-section" aria-labelledby="todo-heading">
+      <h2 id="todo-heading">To-Do List</h2>
+      <label class="field-label" for="todo-input">Task</label>
       <div class="todo-input-row">
-        <input id="todo-input" type="text" placeholder="Add a new task...">
-        <button id="btn-add-task">Add</button>
+        <input id="todo-input" name="task" type="text" autocomplete="off" placeholder="e.g. Prepare project brief…">
+        <button id="btn-add-task" type="button" title="Add this task to your list">Add task</button>
       </div>
+      <p id="todo-status" class="visually-hidden" role="status" aria-live="polite"></p>
       <div class="todo-sort-row">
-        <label for="sort-select">Sort:</label>
-        <select id="sort-select">
-          <option value="default">Default (Added)</option>
-          <option value="active">Active First</option>
-          <option value="done">Completed First</option>
-          <option value="az">A–Z</option>
+        <label for="sort-select">Sort tasks by:</label>
+        <select id="sort-select" name="taskSort">
+          <option value="default">Added order</option>
+          <option value="active">Active first</option>
+          <option value="done">Completed first</option>
+          <option value="az">Name (A–Z)</option>
         </select>
       </div>
       <ul id="todo-list"></ul>
     </section>
 
-    <!-- Section 4: Quick Links -->
-    <section id="links-section">
-      <h2>Quick Links</h2>
-      <div id="links-grid"></div>
-      <div class="add-link-form">
-        <input id="link-name-input" type="text" placeholder="Name">
-        <input id="link-url-input" type="url" placeholder="https://...">
-        <button id="btn-add-link">Add Link</button>
+    <section id="timer-section" aria-labelledby="timer-heading">
+      <h2 id="timer-heading">Focus Timer</h2>
+      <div id="timer-display" role="timer" aria-label="Focus timer">25:00</div>
+      <p id="timer-status" class="visually-hidden" role="status" aria-live="polite"></p>
+      <div class="timer-controls">
+        <button id="btn-start" type="button" title="Start or resume the 25-minute focus timer">Start</button>
+        <button id="btn-stop" type="button" title="Pause the focus timer" disabled>Pause</button>
+        <button id="btn-reset" type="button" title="Reset the timer to 25 minutes">Reset</button>
       </div>
     </section>
 
+    <section id="links-section" aria-labelledby="links-heading">
+      <h2 id="links-heading">Quick Links</h2>
+      <div id="links-grid"></div>
+      <form id="add-link-form" class="add-link-form" novalidate>
+        <div class="field-group">
+          <label class="field-label" for="link-name-input">Link name</label>
+          <input id="link-name-input" name="linkName" type="text" autocomplete="off" placeholder="e.g. GitHub" title="The label shown on your quick link card" aria-describedby="link-name-help link-form-error" required>
+          <p id="link-name-help" class="field-help">This label appears on the shortcut card.</p>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="link-url-input">Website URL</label>
+          <input id="link-url-input" name="linkUrl" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://example.com" title="The website opened by this shortcut" aria-describedby="link-url-help link-form-error" required>
+          <p id="link-url-help" class="field-help">We’ll add https:// if you leave it out.</p>
+        </div>
+        <button id="btn-add-link" type="submit" title="Save this website as a quick link">Save quick link</button>
+        <p id="link-form-error" class="form-error" aria-live="polite"></p>
+      </form>
+    </section>
+  </main>
+
+  <div id="undo-toast" class="undo-toast" role="status" aria-live="polite" aria-atomic="true" hidden>
+    <span id="undo-message">Item deleted.</span>
+    <button id="btn-undo" type="button" title="Restore the item you just deleted">Undo</button>
   </div>
+
   <script src="js/app.js"></script>
 </body>
 </html>
