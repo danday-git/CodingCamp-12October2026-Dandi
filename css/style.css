@@ -1,0 +1,354 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
+
+/* ========================== CSS CUSTOM PROPERTIES ========================== */
+:root {
+  --bg-primary:    #0f0f13;
+  --bg-section:    #1a1a24;
+  --bg-hover:      #252535;
+  --accent:        #6c63ff;
+  --accent-hover:  #5a52e0;
+  --text-primary:  #f0f0f5;
+  --text-secondary:#9090aa;
+  --text-done:     #555566;
+  --danger:        #e05555;
+  --success:       #55cc88;
+  --border:        #2a2a3a;
+}
+
+/* ========================== RESET ========================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+/* ========================== LAYOUT ========================== */
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+#greeting-section,
+#timer-section,
+#todo-section,
+#links-section {
+  background: var(--bg-section);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border);
+}
+
+/* ========================== GREETING SECTION ========================== */
+#clock {
+  font-size: 3rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: 2px;
+}
+
+#date {
+  color: var(--text-secondary);
+  margin: 0.25rem 0 0.75rem;
+  font-size: 0.95rem;
+}
+
+#greeting {
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+/* ========================== SECTION HEADINGS ========================== */
+h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 1rem;
+}
+
+/* ========================== TIMER SECTION ========================== */
+#timer-display {
+  font-size: 4rem;
+  font-weight: 600;
+  font-family: monospace;
+  text-align: center;
+  margin: 1rem 0;
+  color: var(--text-primary);
+  transition: color 0.3s;
+}
+
+#timer-display.running {
+  color: var(--accent);
+}
+
+#timer-display.ended {
+  color: var(--success);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.timer-controls {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+/* ========================== BUTTONS ========================== */
+button {
+  cursor: pointer;
+  padding: 0.5rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background 0.2s, transform 0.1s;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+#btn-start {
+  background: var(--accent);
+  color: white;
+}
+
+#btn-start:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+#btn-stop {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+#btn-stop:hover:not(:disabled) {
+  background: var(--border);
+}
+
+#btn-reset {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+#btn-reset:hover {
+  background: var(--border);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ========================== TODO SECTION ========================== */
+.todo-input-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+#todo-input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+#todo-input:focus {
+  border-color: var(--accent);
+}
+
+#btn-add-task {
+  background: var(--accent);
+  color: white;
+  white-space: nowrap;
+}
+
+#btn-add-task:hover {
+  background: var(--accent-hover);
+}
+
+#todo-list {
+  list-style: none;
+}
+
+#todo-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+#todo-list li:last-child {
+  border-bottom: none;
+}
+
+.task-text {
+  flex: 1;
+  font-size: 0.95rem;
+}
+
+#todo-list li.done .task-text {
+  text-decoration: line-through;
+  color: var(--text-done);
+}
+
+.btn-done {
+  background: transparent;
+  border: 1px solid var(--success);
+  color: var(--success);
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+}
+
+.btn-done:hover {
+  background: var(--success);
+  color: #000;
+}
+
+.btn-edit {
+  background: transparent;
+  border: 1px solid var(--text-secondary);
+  color: var(--text-secondary);
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+}
+
+.btn-edit:hover {
+  background: var(--text-secondary);
+  color: #000;
+}
+
+.btn-delete {
+  background: transparent;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+}
+
+.btn-delete:hover {
+  background: var(--danger);
+  color: white;
+}
+
+/* ========================== QUICK LINKS SECTION ========================== */
+#links-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.link-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.75rem;
+  text-align: center;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.link-card:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+}
+
+.link-card a {
+  display: block;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.4rem;
+}
+
+.link-card .btn-delete-link {
+  background: transparent;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+  padding: 0.2rem 0.5rem;
+  border-radius: 5px;
+  font-size: 0.72rem;
+}
+
+.link-card .btn-delete-link:hover {
+  background: var(--danger);
+  color: white;
+}
+
+.add-link-form {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+#link-name-input,
+#link-url-input {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+#link-name-input:focus,
+#link-url-input:focus {
+  border-color: var(--accent);
+}
+
+#btn-add-link {
+  background: var(--accent);
+  color: white;
+  white-space: nowrap;
+}
+
+#btn-add-link:hover {
+  background: var(--accent-hover);
+}
+
+/* ========================== SCROLLBAR POLISH ========================== */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}

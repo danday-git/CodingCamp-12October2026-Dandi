@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personal Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+
+    <!-- Section 1: Greeting & Clock -->
+    <section id="greeting-section">
+      <div id="clock">00:00:00</div>
+      <div id="date">Loading...</div>
+      <h1 id="greeting">Good Morning 👋</h1>
+    </section>
+
+    <!-- Section 2: Focus Timer -->
+    <section id="timer-section">
+      <h2>Focus Timer</h2>
+      <div id="timer-display">25:00</div>
+      <div class="timer-controls">
+        <button id="btn-start">Start</button>
+        <button id="btn-stop" disabled>Stop</button>
+        <button id="btn-reset">Reset</button>
+      </div>
+    </section>
+
+    <!-- Section 3: To-Do List -->
+    <section id="todo-section">
+      <h2>To-Do List</h2>
+      <div class="todo-input-row">
+        <input id="todo-input" type="text" placeholder="Add a new task...">
+        <button id="btn-add-task">Add</button>
+      </div>
+      <ul id="todo-list"></ul>
+    </section>
+
+    <!-- Section 4: Quick Links -->
+    <section id="links-section">
+      <h2>Quick Links</h2>
+      <div id="links-grid"></div>
+      <div class="add-link-form">
+        <input id="link-name-input" type="text" placeholder="Name">
+        <input id="link-url-input" type="url" placeholder="https://...">
+        <button id="btn-add-link">Add Link</button>
+      </div>
+    </section>
+
+  </div>
+  <script src="js/app.js"></script>
+</body>
+</html>
